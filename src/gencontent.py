@@ -2,9 +2,7 @@ import os
 from markdown_blocks import markdown_to_html_node
 
 
-
-
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
     print(f" * {from_path} {template_path} -> {dest_path}")
     from_file = open(from_path, "r")
     markdown_content = from_file.read()
@@ -20,6 +18,8 @@ def generate_page(from_path, template_path, dest_path):
     title = extract_title(markdown_content)
     template = template.replace("{{ Title }}", title)
     template = template.replace("{{ Content }}", html)
+    template = template.replace('href="/', 'href="{BASEPATH}') 
+    template = template.replace('src="/', 'src="{BASEPATH}')
 
     dest_dir_path = os.path.dirname(dest_path)
     if dest_dir_path != "":
@@ -34,14 +34,14 @@ def extract_title(md):
             return line[2:]
     raise ValueError("no title found")
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath):
     entries = os.listdir(dir_path_content)
     for entry in entries:
         content_path = os.path.join(dir_path_content, entry)
         if os.path.isfile(content_path) and content_path.endswith(".md"):
             rel_path = os.path.relpath(content_path, dir_path_content)
             dest_path = os.path.join(dest_dir_path, rel_path.replace(".md", ".html"))
-            generate_page(content_path, template_path, dest_path)
+            generate_page(content_path, template_path, dest_path, basepath)
         elif os.path.isdir(content_path):
             new_dest_dir = os.path.join(dest_dir_path, entry)
-            generate_pages_recursive(content_path, template_path, new_dest_dir)
+            generate_pages_recursive(content_path, template_path, new_dest_dir, basepath)
